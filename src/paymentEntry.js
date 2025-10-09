@@ -6,6 +6,7 @@ const PaymentEntry = () => {
     const navigate = useNavigate();
     const order = location.state?.order || { 
         buyQuantity: [0,0,0,0,0],
+        itemPrices: [10, 15, 20, 25, 30],
         credit_card_number: '', 
         expir_date: '', 
         cvvCode: '',
@@ -50,8 +51,11 @@ const PaymentEntry = () => {
             <h2>Payment Information</h2>
             <div>
                 <h3>Order Summary:</h3>
-                <p>Product 1: {order.buyQuantity[0]}</p>
-                <p>Product 2: {order.buyQuantity[1]}</p>
+                {order.buyQuantity.filter(quantity => quantity > 0)
+                    .map((quantity, index) => {
+                        return <p key={index}>Product {index + 1}: {quantity}</p>;
+                    })
+                }
             </div>
 
             <form onSubmit={handleSubmit}>

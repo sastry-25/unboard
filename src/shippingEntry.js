@@ -6,6 +6,7 @@ const ShippingEntry = () => {
     const navigate = useNavigate();
     const order = location.state?.order || { 
         buyQuantity: [0,0,0,0,0],
+        itemPrices: [10, 15, 20, 25, 30],
         credit_card_number: '', 
         expir_date: '', 
         cvvCode: '',
@@ -43,7 +44,7 @@ const ShippingEntry = () => {
         };
 
         // This is where we navigate to confirmation or next page!! 
-        navigate('/purchase/confirmation', { state: { order: updatedOrder } });
+        navigate('/purchase/viewOrder', { state: { order: updatedOrder } });
     };
 
     return (

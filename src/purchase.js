@@ -5,6 +5,7 @@ import {useNavigate} from 'react-router-dom'
 const Purchase = () => {
     const [order, setOrder] = useState({
         buyQuantity: [0,0,0,0,0], 
+        itemPrices: [10, 15, 20, 25, 30],
         credit_card_number: '', 
         expir_date: '', 
         cvvCode: '',
@@ -18,7 +19,7 @@ const Purchase = () => {
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {
-        e.preventDefault(); // Don't forget this!
+        e.preventDefault();
         navigate('/purchase/paymentEntry', { state: { order: order } });
     }
 
@@ -35,20 +36,17 @@ const Purchase = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <label>Product 1:</label>
-                <input
-                    type="number"
-                    required
-                    onChange={(e) => handleQuantityChange(0, e.target.value)}
-                />
-                <br/>
-                <label>Product 2:</label>
-                <input
-                    type="number"
-                    required
-                    onChange={(e) => handleQuantityChange(1, e.target.value)}
-                />
-                <br/>
+                {order.buyQuantity.map((quantity, index) => {
+                    return <div key={index}>
+                        <label>Product {index + 1} (${order.itemPrices[index]}):</label>
+                        <input
+                            type="number"
+                            required
+                            onChange={(e) => handleQuantityChange(index, e.target.value)}
+                        />
+                        <br/>
+                    </div>
+                })}
                 <button className='button'>Pay</button>
             </form>
         </div>
