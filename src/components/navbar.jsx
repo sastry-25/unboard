@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
-    const { cart } = useCart();
+    const { cartQuantity } = useCart();
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container-fluid">
@@ -40,7 +40,7 @@ const Navbar = () => {
                         </li>
                         <li className="nav-item">
                             <Link className="nav-link btn btn-primary text-white ms-2" to="/cart">
-                                🛒 {!!cart.length > 0 ? cart.length : ''}
+                                🛒 {cartQuantity > 0 ? cartQuantity : ''}
                             </Link>
                         </li>
                     </ul>

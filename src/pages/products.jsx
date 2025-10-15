@@ -6,58 +6,7 @@ import Footer from '../components/footer';
 import { useCart } from '../context/CartContext';
 
 const Products = () => {
-    const { addItem } = useCart();
-    const products = [
-        {
-            id: 1,
-            name: "Strategy Master",
-            price: 10,
-            description: "Perfect for strategic thinkers! Build your empire and outwit your opponents.",
-            players: "2-4 players",
-            time: "60-90 min",
-            age: "12+"
-        },
-        {
-            id: 2,
-            name: "Family Fun Night",
-            price: 15,
-            description: "Easy to learn, fun for all ages. The perfect game for family gatherings.",
-            players: "3-6 players",
-            time: "30-45 min",
-            age: "8+"
-        },
-        {
-            id: 3,
-            name: "Quick Draw Deluxe",
-            price: 20,
-            description: "Fast-paced drawing and guessing game. Creativity meets competition!",
-            players: "4-8 players",
-            time: "20-30 min",
-            age: "10+"
-        },
-        {
-            id: 4,
-            name: "Mystery Manor",
-            price: 25,
-            description: "Solve the mystery before time runs out. Clues, suspects, and surprises!",
-            players: "2-6 players",
-            time: "45-60 min",
-            age: "14+"
-        },
-        {
-            id: 5,
-            name: "Adventure Quest",
-            price: 30,
-            description: "Epic cooperative adventure. Work together to save the kingdom!",
-            players: "1-5 players",
-            time: "90-120 min",
-            age: "12+"
-        }
-    ];
-
-    const addToCart = (productId) => {
-        addItem(products[productId - 1]);
-    }
+    const { addToCart, catalog } = useCart();
 
     return (
         <div>
@@ -74,7 +23,7 @@ const Products = () => {
             {/* Products Grid */}
             <div className="container my-5">
                 <div className="row">
-                    {products.map((product) => (
+                    {catalog.map((product) => (
                         <div key={product.id} className="col-md-6 col-lg-4 mb-4">
                             <div className="card h-100 shadow-sm">
                                 <div className="card-body">
@@ -94,9 +43,6 @@ const Products = () => {
                                         <button className="btn btn-primary" onClick={() => addToCart(product.id)}>
                                             Add to Cart
                                         </button>
-                                        {/* <Link to="/purchase" className="btn btn-primary">
-                                            Add to Cart
-                                        </Link> */}
                                     </div>
                                 </div>
                             </div>

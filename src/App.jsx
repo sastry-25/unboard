@@ -13,6 +13,7 @@ import ShippingEntry from './pages/shippingEntry';
 import ViewOrder from './pages/viewOrder';
 import ViewConfirmation from './pages/viewConfirmation';
 import CartProvider from './context/CartContext';
+import ShoppingCart from './pages/shoppingCart';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/products" element={<Products />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/cart" element={<ShoppingCart />} />
 
           <Route path="/purchase" element={<Purchase />} />
           <Route path="/" element={<Navigate replace to="/purchase" />} />
