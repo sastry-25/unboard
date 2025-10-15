@@ -54,6 +54,7 @@ const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(new Map());
 
   const [cartQuantity, setCartQuantity] = useState(0);
+  const [cartTotalCost, setCartTotalCost] = useState(0);
 
   const addToCart = (id) => {
     setCart(prev => {
@@ -62,6 +63,7 @@ const CartProvider = ({ children }) => {
       return newCart;
     });
     setCartQuantity(cartQuantity + 1);
+    setCartTotalCost(cartTotalCost + catalog.find(p => p.id === id).price);
   };
 
   const removeFromCart = (id) => {
@@ -73,6 +75,7 @@ const CartProvider = ({ children }) => {
       return newCart;
     });
     setCartQuantity(cartQuantity - 1);
+    setCartTotalCost(cartTotalCost - catalog.find(p => p.id === id).price);
   };
 
   const getCartItems = () =>
@@ -82,7 +85,7 @@ const CartProvider = ({ children }) => {
     }));
 
   return (
-    <CartContext.Provider value={{ catalog, cart, cartQuantity, addToCart, removeFromCart, getCartItems }}>
+    <CartContext.Provider value={{ catalog, cart, cartQuantity, cartTotalCost, addToCart, removeFromCart, getCartItems }}>
       {children}
     </CartContext.Provider>
   );
