@@ -54,6 +54,9 @@ const ContactUs = () => {
                             <a href="mailto:sastry.25@osu.edu" className="text-primary">
                                 sastry.25@osu.edu
                             </a>
+                            <a href="mailto:subler.41@osu.edu" className="text-primary">
+                                subler.41@osu.edu
+                            </a>
                             <p className="small text-muted mt-3">Response time: Within 24 hours</p>
                         </div>
                     </div>
