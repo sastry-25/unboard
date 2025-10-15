@@ -15,9 +15,10 @@ const AboutUs = () => {
         {
             name: "Jacob Subler",
             title: "Co-Founder",
-            education: "TODO",
-            experience: "TODO",
-            passion: "Dedicated to ensuring every customer receives their games quickly and in perfect condition. Board game enthusiast since childhood.",
+            education: "B.S. Computer and Information Science, The Ohio State University",
+            experience: "2 years as a Software Engineer with Ascendum Solutions",
+            passion: `My passion lies in creating premium, thoughtfully designed games that bring people together,
+                        blending quality craftsmanship with memories that last a lifetime.`,
         },
         {
             name: "Drew St. John",
