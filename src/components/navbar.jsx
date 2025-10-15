@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
+    const { cart } = useCart();
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container-fluid">
@@ -34,6 +36,11 @@ const Navbar = () => {
                         <li className="nav-item">
                             <Link className="nav-link btn btn-primary text-white ms-2" to="/purchase">
                                 Shop Now
+                            </Link>
+                        </li>
+                        <li className="nav-item">
+                            <Link className="nav-link btn btn-primary text-white ms-2" to="/cart">
+                                🛒 {!!cart.length > 0 ? cart.length : ''}
                             </Link>
                         </li>
                     </ul>

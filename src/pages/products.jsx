@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
+import { useCart } from '../context/CartContext';
 
 const Products = () => {
+    const { addItem } = useCart();
     const products = [
         {
             id: 1,
@@ -53,6 +55,10 @@ const Products = () => {
         }
     ];
 
+    const addToCart = (productId) => {
+        addItem(products[productId - 1]);
+    }
+
     return (
         <div>
             <Navbar />
@@ -85,9 +91,12 @@ const Products = () => {
                                 <div className="card-footer bg-white border-top-0">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <span className="h4 mb-0 text-primary fw-bold">${product.price}</span>
-                                        <Link to="/purchase" className="btn btn-primary">
+                                        <button className="btn btn-primary" onClick={() => addToCart(product.id)}>
                                             Add to Cart
-                                        </Link>
+                                        </button>
+                                        {/* <Link to="/purchase" className="btn btn-primary">
+                                            Add to Cart
+                                        </Link> */}
                                     </div>
                                 </div>
                             </div>

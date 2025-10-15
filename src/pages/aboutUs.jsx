@@ -32,7 +32,7 @@ const AboutUs = () => {
     return (
         <div>
             <Navbar />
-            
+
             {/* Page Header */}
             <div className="bg-primary text-white py-5">
                 <div className="container text-center">
