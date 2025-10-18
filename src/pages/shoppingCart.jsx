@@ -6,7 +6,7 @@ import CartItemCard from "../components/cartItemCard";
 import { Link } from "react-router-dom";
 
 const CartPage = () => {
-  const { cartQuantity, shippingCost, cartTotalCost, getCartItems } = useCart();
+  const { cartQuantity, cartTotalCost, getCartItems } = useCart();
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -48,7 +48,7 @@ const CartPage = () => {
                                 <p> * Additional shipping costs and tax will be calculated at checkout</p>
                             </div>
                             <div>
-                                <button className="btn btn-primary btn-lg px-5" enabled={cartQuantity > 0}>
+                                <button className="btn btn-primary btn-lg px-5">
                                     Continue to Checkout
                                 </button>
                             </div>
