@@ -49,17 +49,6 @@ const Products = () => {
                         </div>
                     ))}
                 </div>
-
-                {/* Call to Action */}
-                <div className="text-center mt-5 p-5 bg-light rounded">
-                    <h3 className="fw-bold mb-3">Ready to Purchase?</h3>
-                    <p className="text-muted mb-4">
-                        Head to our checkout to select quantities and complete your order.
-                    </p>
-                    <Link to="/purchase" className="btn btn-primary btn-lg">
-                        Go to Checkout
-                    </Link>
-                </div>
             </div>
 
             <Footer />

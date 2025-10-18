@@ -2,9 +2,11 @@ import React from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import { useCart } from "../context/CartContext";
+import CartItemCard from "../components/cartItemCard";
+import { Link } from "react-router-dom";
 
 const CartPage = () => {
-  const { cartQuantity, cartTotalCost, getCartItems } = useCart();
+  const { cartQuantity, shippingCost, cartTotalCost, getCartItems } = useCart();
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -24,39 +26,30 @@ const CartPage = () => {
                 {cartQuantity === 0 ? (
                     <div className="text-center py-5">
                         <h3 className="fw-bold mb-3">Your cart is empty</h3>
-                        <p className="text-muted">Browse our collection to add some games!</p>
+                            <p className="text-muted">
+                                Browse our <Link to="/products" className="text-decoration-underline text-primary">collection</Link> to add some games!
+                            </p>
                     </div>
                 ) : (
                     <>
-                        <div className="row row-cols-1 row-cols-md-2 g-4">
+                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                             {getCartItems().map((item) => (
                                 <div key={item.id} className="col">
-                                    <div className="card h-100 shadow-sm">
-                                        <div className="card-body d-flex flex-column justify-content-between">
-                                            <div>
-                                                <p className="text-center mb-3 display-4">🎲</p>
-                                                <h5 className="card-title fw-bold">{item.name}</h5>
-                                                <p className="card-text text-muted mb-2">
-                                                    Quantity: {item.quantity}
-                                                </p>
-                                                <p className="card-text text-primary fw-bold">
-                                                    ${(item.price * item.quantity).toFixed(2)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <CartItemCard item={item}/>
                                 </div>
                             ))}
                         </div>
 
                         {/* Confirm Button and Price*/}
                         <div className="flex-1 place-content-between text-center mt-5">
-                            <h4 className="fw-bold mb-3">
-                                Total Price: ${cartTotalCost}
-                            </h4>
+                            <div className="rounded-lg border border-1 border-black"/>
+                            <div className="p-4">
+                                <h4>Subtotal: ${cartTotalCost.toFixed(2)}</h4>
+                                <p> * Additional shipping costs and tax will be calculated at checkout</p>
+                            </div>
                             <div>
-                                <button className="btn btn-primary btn-lg px-5" disabled>
-                                    Confirm Purchase
+                                <button className="btn btn-primary btn-lg px-5" enabled={cartQuantity > 0}>
+                                    Continue to Checkout
                                 </button>
                             </div>
                         </div>
