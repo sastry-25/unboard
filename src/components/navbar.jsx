@@ -34,11 +34,6 @@ const Navbar = () => {
                             <Link className="nav-link" to="/contact">Contact Us</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link btn btn-primary text-white ms-2" to="/purchase">
-                                Shop Now
-                            </Link>
-                        </li>
-                        <li className="nav-item">
                             <Link className="nav-link btn btn-primary text-white ms-2" to="/cart">
                                 🛒 {cartQuantity > 0 ? cartQuantity : ''}
                             </Link>

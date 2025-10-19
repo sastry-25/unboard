@@ -125,7 +125,7 @@ const CartItemCard = ({ item }) => {
               ) : (
                 <>
                   <p className="mb-0 me-2 text-muted">
-                    {quantity} @ ${item.price}/ea.
+                    {quantity} @ ${item.price} ea.
                   </p>
                   <button
                     className="btn btn-link p-0 text-decoration-underline text-muted"

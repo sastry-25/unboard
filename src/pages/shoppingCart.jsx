@@ -4,9 +4,11 @@ import Footer from "../components/footer";
 import { useCart } from "../context/CartContext";
 import CartItemCard from "../components/cartItemCard";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
   const { cartQuantity, cartTotalCost, getCartItems } = useCart();
+  const navigate = useNavigate();
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -48,7 +50,7 @@ const CartPage = () => {
                                 <p> * Additional shipping costs and tax will be calculated at checkout</p>
                             </div>
                             <div>
-                                <button className="btn btn-primary btn-lg px-5">
+                                <button className="btn btn-primary btn-lg px-5" onClick={() => navigate("/purchase/paymentEntry")}>
                                     Continue to Checkout
                                 </button>
                             </div>

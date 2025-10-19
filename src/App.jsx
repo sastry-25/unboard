@@ -12,12 +12,12 @@ import PaymentEntry from './pages/paymentEntry';
 import ShippingEntry from './pages/shippingEntry';
 import ViewOrder from './pages/viewOrder';
 import ViewConfirmation from './pages/viewConfirmation';
-import CartProvider from './context/CartContext';
 import ShoppingCart from './pages/shoppingCart';
+import OrderProvider from './context/OrderContext';
 
 function App() {
   return (
-    <CartProvider>
+    <OrderProvider>
       <div className="App">
         <Router>
           <div className = "content">
@@ -39,7 +39,7 @@ function App() {
           </div>
         </Router>
       </div>
-    </CartProvider>
+    </OrderProvider>
   );
 }
 
