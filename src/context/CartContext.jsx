@@ -68,60 +68,65 @@ const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = (id, removeAll) => {
-  let qty = cart.get(id) || 0;
-  const price = catalog.find(p => p.id === id)?.price || 0;
+    let qty = cart.get(id) || 0;
+    const price = catalog.find(p => p.id === id)?.price || 0;
 
-  setCart(prev => {
-    const newCart = new Map(prev);
-    if (!newCart.has(id)) return newCart;
+    setCart(prev => {
+      const newCart = new Map(prev);
+      if (!newCart.has(id)) return newCart;
 
-    if (qty > 1 && !removeAll) {
-      newCart.set(id, qty - 1);
+      if (qty > 1 && !removeAll) {
+        newCart.set(id, qty - 1);
+      } else {
+        newCart.delete(id);
+      }  
+
+      return newCart;
+    });
+
+    if (removeAll) {
+      setCartQuantity(cartQuantity - qty);
+      setCartTotalCost(cartTotalCost - price * qty);
     } else {
-      newCart.delete(id);
+      setCartQuantity(cartQuantity - 1);
+      setCartTotalCost(cartTotalCost - price);
     }
-
-    return newCart;
-  });
-
-  if (removeAll) {
-    setCartQuantity(cartQuantity - qty);
-    setCartTotalCost(cartTotalCost - price * qty);
-  } else {
-    setCartQuantity(cartQuantity - 1);
-    setCartTotalCost(cartTotalCost - price);
-  }
-};
+  };
 
 
   const updateQuantity = (id, newQty) => {
-  setCart(prev => {
-    const newCart = new Map(prev);
+    setCart(prev => {
+      const newCart = new Map(prev);
 
-    if (newQty <= 0) {
-      newCart.delete(id);
-    } else {
-      newCart.set(id, newQty);
-    }
-
-    let newTotalQty = 0;
-    let newTotalCost = 0;
-
-    for (const [pid, qty] of newCart.entries()) {
-      const product = catalog.find(p => p.id === pid);
-      if (product) {
-        newTotalQty += qty;
-        newTotalCost += product.price * qty;
+      if (newQty <= 0) {
+        newCart.delete(id);
+      } else {
+        newCart.set(id, newQty);
       }
-    }
 
-    setCartQuantity(newTotalQty);
-    setCartTotalCost(newTotalCost);
+      let newTotalQty = 0;
+      let newTotalCost = 0;
 
-    return newCart;
-  });
-};
+      for (const [pid, qty] of newCart.entries()) {
+        const product = catalog.find(p => p.id === pid);
+        if (product) {
+          newTotalQty += qty;
+          newTotalCost += product.price * qty;
+        }
+      }
 
+      setCartQuantity(newTotalQty);
+      setCartTotalCost(newTotalCost);
+
+      return newCart;
+    });
+  };
+
+  const clearCart = () => {
+    setCart(new Map());
+    setCartQuantity(0);
+    setCartTotalCost(0);
+  }
 
   const getCartItems = () =>
     Array.from(cart.entries()).map(([id, qty]) => ({
@@ -132,7 +137,8 @@ const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{ catalog, cart, cartQuantity, cartTotalCost,
                                     shippingCost, setShippingCost, addToCart, 
-                                    removeFromCart, getCartItems, updateQuantity }}>
+                                    removeFromCart, getCartItems, updateQuantity,
+                                    clearCart }}>
       {children}
     </CartContext.Provider>
   );

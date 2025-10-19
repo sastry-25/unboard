@@ -1,75 +1,165 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
+import { useCart } from "../context/CartContext";
+import { useOrder } from "../context/OrderContext";
+import { useNavigate } from "react-router-dom";
 
-const ViewOrder = () => {
-  const title = "View Order Page";
-  const location = useLocation();
+const OrderReview = () => {
   const navigate = useNavigate();
+  const { getCartItems, cartTotalCost, clearCart } = useCart();
+  const { shippingDetails, paymentDetails, salesTax, shippingCost, clearOrderDetails } = useOrder();
 
-  const order = location.state?.order || { 
-    buyQuantity: [0,0,0,0,0],
-    itemPrices: [10, 15, 20, 25, 30],
-    credit_card_number: '', 
-    expir_date: '', 
-    cvvCode: '',
-    card_holder_name: '', 
-    address_1: '', 
-    address_2: '', 
-    city: '', 
-    state: '', 
-    zip: '',
-  };
+  const calculatedTax = (cartTotalCost + shippingCost) * salesTax;
+  const orderTotal = cartTotalCost + shippingCost + calculatedTax;
 
-  const subTotals = order.buyQuantity.map((quantity, index) =>
-    quantity > 0 ? quantity * order.itemPrices[index] : 0
-  );
-  const totalCost = subTotals.reduce((sum, val) => sum + val, 0);
-
-  const getAddress = () => {
-    let addressString = order.address_1 || '';
-    if (order.address_2) addressString += ' ' + order.address_2;
-    addressString += ` ${order.city}, ${order.state} ${order.zip}`;
-    return addressString.trim();
+  const maskCardNumber = (number) => {
+    if (!number) return "";
+    const cleaned = number.replace(/\s/g, "");
+    if (cleaned.length < 16) return "Invalid Number";
+    return ("**** **** **** ") + cleaned.slice(12);
   };
 
   const handlePlaceOrder = () => {
-    const updatedOrder = {
-      ...order,
-      totalCost,
-      subTotals
-    };
-    navigate('/purchase/viewConfirmation', { state: { order: updatedOrder } });
-  };
+    clearCart();
+    clearOrderDetails();
+    navigate("/purchase/viewConfirmation")
+  }
 
   return (
-    <div>
-      <h1>{title}</h1>
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
 
-      <h2>Shipping Details</h2>
-      <div>
-        <p>{order.card_holder_name}</p>
-        <p>{getAddress()}</p>
-      </div>
-
-      <br />
-      <h2>Items Purchased</h2>
-      {subTotals.map((subTotal, index) => (
-        subTotal > 0 && (
-          <div key={index}>
-            <h3>Product {index + 1}</h3>
-            <p>Quantity: {order.buyQuantity[index]}</p>
-            <p>Subtotal: ${subTotal.toFixed(2)}</p>
+      <main className="flex-grow-1">
+        {/* Page Header */}
+        <div className="bg-primary text-white py-4">
+          <div className="container text-center">
+            <h1 className="display-5 fw-bold">Order Review</h1>
+            <p className="lead">Confirm your order details before submission</p>
           </div>
-        )
-      ))}
+        </div>
 
-      <h2>Total Cost: ${totalCost}</h2>
+        {/* Main Content */}
+        <div className="container my-5">
+          <div className="row justify-content-center align-items-start g-5">
+            {/* Order Details */}
+            <div className="col-md-7">
+              {/* Cart Summary */}
+              <div className="card shadow-sm mb-5 p-4">
+               <h4 className="fw-bold mb-3">🛒 Cart Summary</h4>
+               {getCartItems().length === 0 ? (
+                  <p className="text-muted">Your cart is empty.</p>
+                ) : (
+                 <ul className="list-group list-group-flush">
+                   {getCartItems().map((item) => (
+                      <li
+                       key={item.id}
+                       className="list-group-item d-flex justify-content-between align-items-center"
+                     >
+                       <div
+                         className="text-start"
+                         style={{
+                           minWidth: "70%",
+                           wordBreak: "break-word",
+                         }}
+                       >
+                          <strong>{item.name}</strong>
+                          <br />
+                          <span className="text-muted">Quantity: {item.quantity}</span>
+                        </div>
+                        <span
+                          className="fw-semibold text-end"
+                          style={{ minWidth: "25%", textAlign: "right" }}
+                        >
+                         ${(item.price * item.quantity).toFixed(2)}
+                        </span>
+                     </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-      <button onClick={handlePlaceOrder}>
-        Place Order
-      </button>
+              {/* Shipping Details */}
+              <div className="card shadow-sm mb-5 p-4">
+                <h4 className="fw-bold mb-3">📦 Shipping Details</h4>
+                {shippingDetails && shippingDetails.address_1 ? (
+                  <div>
+                    <p className="mb-1">{shippingDetails.address_1}</p>
+                    {shippingDetails.address_2 && (
+                      <p className="mb-1">{shippingDetails.address_2}</p>
+                    )}
+                    <p className="mb-1">
+                      {shippingDetails.city}, {shippingDetails.state}{" "}
+                      {shippingDetails.zip}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-muted">No shipping information provided.</p>
+                )}
+              </div>
+
+              {/* Payment Details */}
+              <div className="card shadow-sm p-4">
+                <h4 className="fw-bold mb-3">💳 Payment Details</h4>
+                {paymentDetails && paymentDetails.credit_card_number ? (
+                  <div>
+                    <p className="mb-1">
+                      <strong>Card Holder:</strong>{" "}
+                      {paymentDetails.card_holder_name || "N/A"}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Card Number:</strong>{" "}
+                      {maskCardNumber(paymentDetails.credit_card_number)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-muted">No payment information provided.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="col-md-4">
+              <div
+                className="card shadow-lg text-center p-4"
+                style={{ borderRadius: "1rem" }}
+              >
+                <h4 className="fw-bold mb-3">Order Summary</h4>
+
+                <div className="text-start mx-auto" style={{ maxWidth: "260px" }}>
+                  <p className="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>${cartTotalCost.toFixed(2)}</span>
+                  </p>
+                  <p className="d-flex justify-content-between mb-2">
+                    <span>Shipping:</span>
+                    <span>${shippingCost.toFixed(2)}</span>
+                  </p>
+                  <p className="d-flex justify-content-between mb-2">
+                    <span>Sales Tax:</span>
+                    <span>${calculatedTax.toFixed(2)}</span>
+                  </p>
+                  <hr className="my-3" />
+                  <p className="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total:</span>
+                    <span>${orderTotal.toFixed(2)}</span>
+                  </p>
+                </div>
+
+                <button
+                  className="btn btn-primary btn-lg w-100 mt-4"
+                  onClick={() => handlePlaceOrder()}
+                >
+                  Place Order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
 
-export default ViewOrder;
+export default OrderReview;

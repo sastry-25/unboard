@@ -20,6 +20,22 @@ const OrderProvider = ({ children }) => {
     zip: ''
   });
 
+  const clearOrderDetails = () => {
+    setPaymentDetails({
+      credit_card_number: '',
+      expir_date: '',
+      cvvCode: '',
+      card_holder_name: ''
+    });
+    setShippingDetails({
+      address_1: '',
+      address_2: '',
+      city: '',
+      state: '',
+      zip: ''
+    });
+  }
+
   return (
     <OrderContext.Provider
       value={{
@@ -30,7 +46,8 @@ const OrderProvider = ({ children }) => {
         paymentDetails,
         setPaymentDetails,
         shippingDetails,
-        setShippingDetails
+        setShippingDetails,
+        clearOrderDetails
       }}
     >
       <CartProvider>{children}</CartProvider>
