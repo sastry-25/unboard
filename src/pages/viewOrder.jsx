@@ -22,7 +22,7 @@ const OrderReview = () => {
   const handlePlaceOrder = () => {
     clearCart();
     clearOrderDetails();
-    navigate("/purchase/viewConfirmation")
+    navigate("/order/viewConfirmation")
   }
 
   return (

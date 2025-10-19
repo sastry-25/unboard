@@ -7,7 +7,6 @@ import Products from './pages/products';
 import AboutUs from './pages/aboutUs';
 import ContactUs from './pages/contactUs';
 
-import Purchase from './pages/purchase';
 import PaymentEntry from './pages/paymentEntry';
 import ShippingEntry from './pages/shippingEntry';
 import ViewOrder from './pages/viewOrder';
@@ -29,12 +28,11 @@ function App() {
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/cart" element={<ShoppingCart />} />
 
-          <Route path="/purchase" element={<Purchase />} />
-          <Route path="/" element={<Navigate replace to="/purchase" />} />
-          <Route path="/purchase/paymentEntry" element={<PaymentEntry />} />
-          <Route path="/purchase/shippingEntry" element={<ShippingEntry />} />
-          <Route path="/purchase/viewOrder" element={<ViewOrder />} />
-          <Route path="/purchase/viewConfirmation" element={<ViewConfirmation />} />
+          <Route path="/" element={<Navigate replace to="/products" />} />
+          <Route path="/order/paymentEntry" element={<PaymentEntry />} />
+          <Route path="/order/shippingEntry" element={<ShippingEntry />} />
+          <Route path="/order/viewOrder" element={<ViewOrder />} />
+          <Route path="/order/viewConfirmation" element={<ViewConfirmation />} />
           </Routes>
           </div>
         </Router>

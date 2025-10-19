@@ -59,7 +59,7 @@ const ShippingEntry = () => {
       zip: zip,
     });
 
-    navigate("/purchase/viewOrder");
+    navigate("/order/viewOrder");
   };
 
   return (

@@ -63,7 +63,7 @@ const PaymentEntry = () => {
       card_holder_name: cardHolder,
     });
 
-    navigate("/purchase/shippingEntry");
+    navigate("/order/shippingEntry");
   };
 
   return (

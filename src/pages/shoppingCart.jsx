@@ -50,7 +50,7 @@ const CartPage = () => {
                                 <p> * Additional shipping costs and tax will be calculated at checkout</p>
                             </div>
                             <div>
-                                <button className="btn btn-primary btn-lg px-5" onClick={() => navigate("/purchase/paymentEntry")}>
+                                <button className="btn btn-primary btn-lg px-5" onClick={() => navigate("/order/paymentEntry")}>
                                     Continue to Checkout
                                 </button>
                             </div>

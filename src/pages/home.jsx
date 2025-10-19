@@ -16,7 +16,6 @@ const Home = () => {
                         Discover our curated collection of board games that bring families and friends together.
                     </p>
                     <Link to="/products" className="btn btn-light btn-lg me-3">Browse Games</Link>
-                    <Link to="/purchase" className="btn btn-outline-light btn-lg">Shop Now</Link>
                 </div>
             </div>
 
