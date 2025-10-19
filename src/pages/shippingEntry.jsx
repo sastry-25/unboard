@@ -1,128 +1,213 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
+import { useOrder } from "../context/OrderContext";
+import { useNavigate } from "react-router-dom";
 
 const ShippingEntry = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const order = location.state?.order || { 
-        buyQuantity: [0,0,0,0,0],
-        itemPrices: [10, 15, 20, 25, 30],
-        credit_card_number: '', 
-        expir_date: '', 
-        cvvCode: '',
-        card_holder_name: '', 
-        address_1: '', 
-        address_2: '', 
-        city: '', 
-        state: '', 
-        zip: '',
-    };
+  const navigate = useNavigate();
+  const { setShippingDetails } = useOrder();
 
-    const [shippingInfo, setShippingInfo] = useState({
-        address_1: order.address_1 || '',
-        address_2: order.address_2 || '',
-        city: order.city || '',
-        state: order.state || '',
-        zip: order.zip || '',
+  const [address1, setAddress1] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [city, setCity] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [zip, setZip] = useState("");
+  const [shippingEstimate, setShippingEstimate] = useState(0);
+
+  useEffect(() => {
+    setShippingEstimate(0);
+  }, []);
+
+  // Change shipping estimate on valid state update
+  useEffect(() => {
+    if (/^[A-Z]{2}$/.test(stateVal)) {
+      setShippingEstimate(Math.floor(Math.random() * 4) + 2);
+    }
+  }, [stateVal]);
+
+  const handleStateChange = (e) => {
+    let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+    if (value.length > 2) value = value.slice(0, 2);
+    setStateVal(value);
+  };
+
+  const handleZipChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 5) value = value.slice(0, 5);
+    setZip(value);
+  };
+
+  // --- Validation ---
+  const isAddress1Valid = address1.trim().length >= 1;
+  const isCityValid = city.trim().length >= 1;
+  const isStateValid = /^[A-Z]{2}$/.test(stateVal);
+  const isZipValid = /^\d{5}$/.test(zip);
+  const isFormValid =
+    isAddress1Valid && isCityValid && isStateValid && isZipValid;
+
+  // --- Submit Handler ---
+  const updateShippingDetails = (e) => {
+    e.preventDefault();
+    if (!isFormValid) return;
+
+    setShippingDetails({
+      address_1: address1,
+      address_2: address2,
+      city: city,
+      state: stateVal,
+      zip: zip,
     });
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setShippingInfo(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    navigate("/purchase/confirmation");
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        
-        // Update order with shipping information
-        const updatedOrder = {
-            ...order,
-            ...shippingInfo
-        };
+  return (
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
 
-        // This is where we navigate to confirmation or next page!! 
-        navigate('/purchase/viewOrder', { state: { order: updatedOrder } });
-    };
-
-    return (
-        <div>
-            <h2>Shipping Information</h2>
-            
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Address Line 1:</label>
-                    <input
-                        type="text"
-                        name="address_1"
-                        value={shippingInfo.address_1}
-                        onChange={handleInputChange}
-                        placeholder="Street address"
-                        required
-                    />
-                </div>
-                <br/>
-
-                <div>
-                    <label>Address Line 2:</label>
-                    <input
-                        type="text"
-                        name="address_2"
-                        value={shippingInfo.address_2}
-                        onChange={handleInputChange}
-                        placeholder="Apartment, suite, etc. (optional)"
-                    />
-                </div>
-                <br/>
-
-                <div>
-                    <label>City:</label>
-                    <input
-                        type="text"
-                        name="city"
-                        value={shippingInfo.city}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-                <br/>
-
-                <div>
-                    <label>State:</label>
-                    <input
-                        type="text"
-                        name="state"
-                        value={shippingInfo.state}
-                        onChange={handleInputChange}
-                        maxLength="2"
-                        pattern="[A-Z]{2}"
-                        placeholder="e.g., CA, NY"
-                        required
-                    />
-                </div>
-                <br/>
-
-                <div>
-                    <label>ZIP Code:</label>
-                    <input
-                        type="text"
-                        name="zip"
-                        value={shippingInfo.zip}
-                        onChange={handleInputChange}
-                        pattern="\d{5}"
-                        maxLength="5"
-                        placeholder="12345"
-                        required
-                    />
-                </div>
-                <br/>
-
-                <button type="submit" className="button">Complete Order</button>
-            </form>
+      <main className="flex-grow-1">
+        {/* Header */}
+        <div className="bg-primary text-white py-4">
+          <div className="container">
+            <h1 className="display-5 fw-bold">Shipping Information</h1>
+            <p className="lead">Enter your shipping details to continue</p>
+          </div>
         </div>
-    );
+
+        <div className="container my-5">
+          <div className="row justify-content-center align-items-stretch">
+            {/* Left Column - Shipping Form */}
+            <div className="col-md-5 d-flex justify-content-end pe-5">
+              <div className="d-inline-block text-end align-self-center">
+                <form
+                  className="text-start"
+                  onSubmit={updateShippingDetails}
+                  style={{ maxWidth: "300px" }}
+                >
+                  {/* Address Line 1 */}
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold">
+                      Address Line 1
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
+                      placeholder="100 Example Dr."
+                      value={address1}
+                      onChange={(e) => setAddress1(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Address Line 2 */}
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold">
+                      Address Line 2
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
+                      placeholder="Apt, Suite, Unit, etc."
+                      value={address2}
+                      onChange={(e) => setAddress2(e.target.value)}
+                    />
+                  </div>
+
+                  {/* City and State */}
+                  <div className="mb-4">
+                    <div className="d-flex justify-content-between align-items-end">
+                      <div>
+                        <label className="form-label fw-semibold">City</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-lg"
+                          placeholder="Columbus"
+                          style={{ maxWidth: "150px" }}
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label fw-semibold">State</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-lg"
+                          placeholder="OH"
+                          style={{ maxWidth: "100px" }}
+                          value={stateVal}
+                          onChange={handleStateChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zip */}
+                  <div className="mb-5">
+                    <label className="form-label fw-semibold">Zip</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
+                      placeholder="12345"
+                      style={{ maxWidth: "150px" }}
+                      value={zip}
+                      onChange={handleZipChange}
+                    />
+                  </div>
+
+                  {/* Confirm Shipping Button */}
+                  <div className="mt-5">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-lg w-100"
+                      disabled={!isFormValid}
+                      style={{
+                        opacity: isFormValid ? 1 : 0.6,
+                        cursor: isFormValid ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      Confirm Shipping
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* Shipping Estimate Card */}
+            <div className="col-md-5 d-flex justify-content-start align-items-center ps-5">
+              <div
+                className="card shadow-lg text-center p-4"
+                style={{
+                  width: "300px",
+                  height: "300px",
+                  borderRadius: "1rem",
+                }}
+              >
+                <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center">
+                  <h4 className="fw-bold mb-3">
+                    Shipping Estimate – {shippingEstimate} weeks
+                  </h4>
+                  <div
+                    style={{
+                      fontSize: "3rem",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    🚚
+                  </div>
+                  <p className="text-muted" style={{ fontSize: "0.9rem" }}>
+                    * shipping estimates may vary based on location and
+                    availability
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
 };
 
 export default ShippingEntry;
