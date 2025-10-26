@@ -1,17 +1,25 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [confirmationNumber, setConfirmationNumber] = useState("");
+  const [orderTotal, setOrderTotal] = useState(null);
 
-  // Generate random confirmation number
   useEffect(() => {
-    const randomNum = Math.floor(100000000 + Math.random() * 900000000);
-    setConfirmationNumber(randomNum.toString());
-  }, []);
+    // Get confirmation number from navigation state (passed from viewOrder)
+    if (location.state?.confirmationNumber) {
+      setConfirmationNumber(location.state.confirmationNumber);
+      setOrderTotal(location.state.orderTotal);
+    } else {
+      // Fallback: generate random if somehow accessed directly
+      const randomNum = Math.floor(100000 + Math.random() * 900000);
+      setConfirmationNumber(`ORD-${randomNum}`);
+    }
+  }, [location.state]);
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -34,16 +42,25 @@ const OrderConfirmation = () => {
           >
             <h3 className="fw-bold mb-3">Thank You!</h3>
             <p className="mb-4 fs-5">
-              Your order has been successfully placed. We’re getting it ready to
+              Your order has been successfully placed. We're getting it ready to
               ship to you soon.
             </p>
 
             <div className="bg-light rounded py-3 px-4 mb-4 border">
               <p className="mb-0 fw-semibold">Confirmation Number:</p>
               <h4 className="fw-bold text-primary mt-2 mb-0">
-                #{confirmationNumber}
+                {confirmationNumber}
               </h4>
             </div>
+
+            {orderTotal && (
+              <div className="bg-light rounded py-3 px-4 mb-4 border">
+                <p className="mb-0 fw-semibold">Order Total:</p>
+                <h5 className="fw-bold text-success mt-2 mb-0">
+                  ${orderTotal.toFixed(2)}
+                </h5>
+              </div>
+            )}
 
             <p className="text-muted mb-5" style={{ fontSize: "0.95rem" }}>
               A confirmation email will be sent to your account shortly.

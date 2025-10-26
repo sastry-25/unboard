@@ -1,13 +1,19 @@
+import { useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import { useCart } from "../context/CartContext";
 import { useOrder } from "../context/OrderContext";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = "https://3tuppmi6x6.execute-api.us-east-2.amazonaws.com/dev";
+
 const OrderReview = () => {
   const navigate = useNavigate();
   const { getCartItems, cartTotalCost, clearCart } = useCart();
   const { shippingDetails, paymentDetails, salesTax, shippingCost, clearOrderDetails } = useOrder();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const calculatedTax = (cartTotalCost + shippingCost) * salesTax;
   const orderTotal = cartTotalCost + shippingCost + calculatedTax;
@@ -19,11 +25,67 @@ const OrderReview = () => {
     return ("**** **** **** ") + cleaned.slice(12);
   };
 
-  const handlePlaceOrder = () => {
-    clearCart();
-    clearOrderDetails();
-    navigate("/order/viewConfirmation")
-  }
+  const handlePlaceOrder = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Prepare order data
+      const orderData = {
+        items: getCartItems().map(item => ({
+          id: item.id,
+          quantity: item.quantity
+        })),
+        shipping: {
+          name: paymentDetails.card_holder_name || "Customer",
+          address: shippingDetails.address_1 + (shippingDetails.address_2 ? ` ${shippingDetails.address_2}` : ""),
+          city: shippingDetails.city,
+          state: shippingDetails.state,
+          zip: shippingDetails.zip
+        },
+        payment: {
+          cardNumber: paymentDetails.credit_card_number,
+          cardHolder: paymentDetails.card_holder_name,
+          expirationDate: paymentDetails.expir_date
+        }
+      };
+
+      console.log("Submitting order:", orderData);
+
+      // Submit order to API
+      const response = await fetch(`${API_BASE_URL}/order-processing/order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      console.log("Order response:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || `Order failed: ${response.status}`);
+      }
+
+      // Success! Clear cart and navigate to confirmation with the confirmation number
+      clearCart();
+      clearOrderDetails();
+      navigate("/order/viewConfirmation", { 
+        state: { 
+          confirmationNumber: result.confirmationNumber,
+          orderDetails: result.orderDetails,
+          orderTotal: result.orderTotal
+        } 
+      });
+
+    } catch (err) {
+      console.error("Error placing order:", err);
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -40,6 +102,18 @@ const OrderReview = () => {
 
         {/* Main Content */}
         <div className="container my-5">
+          {error && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              <strong>Error placing order:</strong> {error}
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setError(null)}
+                aria-label="Close"
+              ></button>
+            </div>
+          )}
+
           <div className="row justify-content-center align-items-start g-5">
             {/* Order Details */}
             <div className="col-md-7">
@@ -147,9 +221,17 @@ const OrderReview = () => {
 
                 <button
                   className="btn btn-primary btn-lg w-100 mt-4"
-                  onClick={() => handlePlaceOrder()}
+                  onClick={handlePlaceOrder}
+                  disabled={isSubmitting || getCartItems().length === 0}
                 >
-                  Place Order
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Processing...
+                    </>
+                  ) : (
+                    'Place Order'
+                  )}
                 </button>
               </div>
             </div>
