@@ -1,62 +1,45 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext();
 
-const CartProvider = ({ children }) => {
-  const [catalog] = useState([
-        {
-            id: 1,
-            name: "Strategy Master",
-            price: 9.99,
-            description: "Perfect for strategic thinkers! Build your empire and outwit your opponents.",
-            players: "2-4 players",
-            time: "60-90 min",
-            age: "12+"
-        },
-        {
-            id: 2,
-            name: "Family Fun Night",
-            price: 14.99,
-            description: "Easy to learn, fun for all ages. The perfect game for family gatherings.",
-            players: "3-6 players",
-            time: "30-45 min",
-            age: "8+"
-        },
-        {
-            id: 3,
-            name: "Quick Draw Deluxe",
-            price: 19.99,
-            description: "Fast-paced drawing and guessing game. Creativity meets competition!",
-            players: "4-8 players",
-            time: "20-30 min",
-            age: "10+"
-        },
-        {
-            id: 4,
-            name: "Mystery Manor",
-            price: 24.99,
-            description: "Solve the mystery before time runs out. Clues, suspects, and surprises!",
-            players: "2-6 players",
-            time: "45-60 min",
-            age: "14+"
-        },
-        {
-            id: 5,
-            name: "Adventure Quest",
-            price: 29.99,
-            description: "Epic cooperative adventure. Work together to save the kingdom!",
-            players: "1-5 players",
-            time: "90-120 min",
-            age: "12+"
-        }
-    ]);
+const API_BASE_URL = "https://3tuppmi6x6.execute-api.us-east-2.amazonaws.com/dev";
 
+const CartProvider = ({ children }) => {
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [cart, setCart] = useState(new Map());
   const [cartQuantity, setCartQuantity] = useState(0);
   const [cartTotalCost, setCartTotalCost] = useState(0);
   const [shippingCost, setShippingCost] = useState(10.99);
   
   const [toasts, setToasts] = useState([]);
+
+  // Fetch catalog from API on mount
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/inventory-management/inventory`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch catalog: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setCatalog(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching catalog:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCatalog();
+  }, []);
 
   const showToast = (productName) => {
     const newToast = {
@@ -157,10 +140,21 @@ const CartProvider = ({ children }) => {
     }));
 
   return (
-    <CartContext.Provider value={{ catalog, cart, cartQuantity, cartTotalCost,
-                                    shippingCost, setShippingCost, addToCart, 
-                                    removeFromCart, getCartItems, updateQuantity,
-                                    clearCart }}>
+    <CartContext.Provider value={{ 
+      catalog, 
+      cart, 
+      cartQuantity, 
+      cartTotalCost,
+      shippingCost, 
+      setShippingCost, 
+      addToCart, 
+      removeFromCart, 
+      getCartItems, 
+      updateQuantity,
+      clearCart,
+      loading,
+      error
+    }}>
       {children}
       
       {/* Toast Notifications Container */}
