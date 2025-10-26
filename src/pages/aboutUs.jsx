@@ -23,8 +23,8 @@ const AboutUs = () => {
         {
             name: "Drew St. John",
             title: "Co-Founder",
-            education: "TODO",
-            experience: "TODO",
+            education: "B.S. Computer Science and Engineering. The Ohio State University",
+            experience: "2 years as developer at Rudolph Libbe Group",
             passion: "Believes in the power of play to strengthen relationships. On a mission to make board games accessible to everyone.",
         }
     ];
