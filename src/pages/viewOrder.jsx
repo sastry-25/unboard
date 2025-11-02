@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useOrder } from "../context/OrderContext";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "https://3tuppmi6x6.execute-api.us-east-2.amazonaws.com/dev";
+const API_BASE_URL = "replace with the api_base_url";
 
 const OrderReview = () => {
   const navigate = useNavigate();
