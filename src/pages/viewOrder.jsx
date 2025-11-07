@@ -11,9 +11,9 @@ const OrderReview = () => {
   const navigate = useNavigate();
   const { getCartItems, cartTotalCost, clearCart } = useCart();
   const { shippingDetails, paymentDetails, salesTax, shippingCost, clearOrderDetails } = useOrder();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorHtml, setErrorHtml] = useState(null);
 
   const calculatedTax = (cartTotalCost + shippingCost) * salesTax;
   const orderTotal = cartTotalCost + shippingCost + calculatedTax;
@@ -22,66 +22,138 @@ const OrderReview = () => {
     if (!number) return "";
     const cleaned = number.replace(/\s/g, "");
     if (cleaned.length < 16) return "Invalid Number";
-    return ("**** **** **** ") + cleaned.slice(12);
+    return "**** **** **** " + cleaned.slice(12);
+  };
+
+  const buildInsufficientStockBanner = (result) => {
+    let items = Array.isArray(result.items) ? result.items.slice() : [];
+
+    if (!items.length && result.message?.toLowerCase().includes("not in stock")) {
+      const available = Number.isFinite(result.availableQuantity) ? result.availableQuantity : 0;
+      const cartItems = getCartItems();
+      const idMatch = result.message.match(/item\s+(\d+)/i);
+      let failing = null;
+
+      if (idMatch) {
+        const failedId = parseInt(idMatch[1], 10);
+        failing = cartItems.find((ci) => Number(ci.id) === failedId) || null;
+      }
+      if (!failing) {
+        failing = cartItems.find((ci) => ci.quantity > available) || cartItems[0];
+      }
+
+      if (failing) {
+        items = [
+          {
+            itemId: failing.id,
+            itemName: failing.name || `Item ${failing.id}`,
+            requested: failing.quantity,
+            available: available,
+          },
+        ];
+      }
+    }
+
+    const listHTML = items
+      .map((i) => {
+        const req = Number(i.requested) || 0;
+        const avail = Number(i.available) || 0;
+        const toRemove = Math.max(req - avail, 0);
+        const name = i.itemName || `Item ${i.itemId ?? ""}`.trim();
+        return `<div><strong>${name}</strong> — requested ${req}, only ${avail} available <span>(remove ${toRemove})</span></div>`;
+      })
+      .join("");
+
+    const fullMsg = `
+      <p><strong>1 or more items ordered do not have enough quantity in stock.</strong></p>
+      ${listHTML}
+      <p class="mt-2">Please remove or adjust these items before checking out again.</p>
+      <button class="btn btn-outline-light btn-sm mt-2" id="returnToCart">Return to Cart</button>
+    `;
+
+    setErrorHtml(fullMsg);
+
+    setTimeout(() => {
+      const btn = document.getElementById("returnToCart");
+      if (btn) btn.onclick = () => navigate("/cart");
+    }, 0);
   };
 
   const handlePlaceOrder = async () => {
     setIsSubmitting(true);
-    setError(null);
+    setErrorHtml(null);
 
     try {
-      // Prepare order data
       const orderData = {
-        items: getCartItems().map(item => ({
+        items: getCartItems().map((item) => ({
           id: item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
         })),
         shipping: {
-          name: paymentDetails.card_holder_name || "Customer",
-          address: shippingDetails.address_1 + (shippingDetails.address_2 ? ` ${shippingDetails.address_2}` : ""),
+          address1: shippingDetails.address_1,
+          address2: shippingDetails.address_2,
           city: shippingDetails.city,
           state: shippingDetails.state,
-          zip: shippingDetails.zip
+          country: "USA",
+          postalCode: shippingDetails.zip,
+          email: paymentDetails.email || "",
         },
         payment: {
-          cardNumber: paymentDetails.credit_card_number,
           cardHolder: paymentDetails.card_holder_name,
-          expirationDate: paymentDetails.expir_date
-        }
+          cardNumber: paymentDetails.credit_card_number,
+          expirationDate: paymentDetails.expir_date,
+          cvv: paymentDetails.cvv || "",
+        },
+        customerName: paymentDetails.card_holder_name,
+        customerEmail: paymentDetails.email || "",
       };
 
-      console.log("Submitting order:", orderData);
-
-      // Submit order to API
       const response = await fetch(`${API_BASE_URL}/order-processing/order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
       });
 
-      const result = await response.json();
-      console.log("Order response:", result);
+      const rawResult = await response.json();
+      const result = typeof rawResult.body === "string" ? JSON.parse(rawResult.body) : rawResult;
 
-      if (!response.ok) {
-        throw new Error(result.message || `Order failed: ${response.status}`);
+      if (rawResult.statusCode && rawResult.statusCode >= 400) {
+        if (
+          result.message?.toLowerCase().includes("insufficient stock") ||
+          result.message?.toLowerCase().includes("not in stock")
+        ) {
+          buildInsufficientStockBanner(result);
+          return;
+        }
+
+        if (result.message?.toLowerCase().includes("not found")) {
+          setErrorHtml(`<p>One or more items in your cart could not be found in inventory.</p>
+                        <p>Please refresh your cart before trying again.</p>`);
+          return;
+        }
+
+        setErrorHtml(`<p>${result.message || "We were unable to process your order. Please try again."}</p>`);
+        return;
       }
 
-      // Success! Clear cart and navigate to confirmation with the confirmation number
+      if (!result.confirmationNumber) {
+        setErrorHtml(`<p>Order succeeded but no confirmation number was returned.</p>`);
+        return;
+      }
+
       clearCart();
       clearOrderDetails();
-      navigate("/order/viewConfirmation", { 
-        state: { 
-          confirmationNumber: result.confirmationNumber,
-          orderDetails: result.orderDetails,
-          orderTotal: result.orderTotal
-        } 
-      });
 
+      navigate("/order/viewConfirmation", {
+        state: {
+          confirmationNumber: result.confirmationNumber,
+          orderDetails: result,
+          orderTotal: result.orderTotal,
+        },
+      });
     } catch (err) {
       console.error("Error placing order:", err);
-      setError(err.message);
+      setErrorHtml(`<p>A network or server error occurred. Please try again.</p>`);
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +164,6 @@ const OrderReview = () => {
       <Navbar />
 
       <main className="flex-grow-1">
-        {/* Page Header */}
         <div className="bg-primary text-white py-4">
           <div className="container text-center">
             <h1 className="display-5 fw-bold">Order Review</h1>
@@ -100,42 +171,32 @@ const OrderReview = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="container my-5">
-          {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-              <strong>Error placing order:</strong> {error}
-              <button 
-                type="button" 
-                className="btn-close" 
-                onClick={() => setError(null)}
-                aria-label="Close"
-              ></button>
-            </div>
+          {errorHtml && (
+            <div
+              className="alert alert-danger alert-dismissible fade show"
+              role="alert"
+              dangerouslySetInnerHTML={{ __html: errorHtml }}
+            />
           )}
 
           <div className="row justify-content-center align-items-start g-5">
-            {/* Order Details */}
             <div className="col-md-7">
-              {/* Cart Summary */}
               <div className="card shadow-sm mb-5 p-4">
-               <h4 className="fw-bold mb-3">🛒 Cart Summary</h4>
-               {getCartItems().length === 0 ? (
+                <h4 className="fw-bold mb-3">🛒 Cart Summary</h4>
+                {getCartItems().length === 0 ? (
                   <p className="text-muted">Your cart is empty.</p>
                 ) : (
-                 <ul className="list-group list-group-flush">
-                   {getCartItems().map((item) => (
+                  <ul className="list-group list-group-flush">
+                    {getCartItems().map((item) => (
                       <li
-                       key={item.id}
-                       className="list-group-item d-flex justify-content-between align-items-center"
-                     >
-                       <div
-                         className="text-start"
-                         style={{
-                           minWidth: "70%",
-                           wordBreak: "break-word",
-                         }}
-                       >
+                        key={item.id}
+                        className="list-group-item d-flex justify-content-between align-items-center"
+                      >
+                        <div
+                          className="text-start"
+                          style={{ minWidth: "70%", wordBreak: "break-word" }}
+                        >
                           <strong>{item.name}</strong>
                           <br />
                           <span className="text-muted">Quantity: {item.quantity}</span>
@@ -144,26 +205,22 @@ const OrderReview = () => {
                           className="fw-semibold text-end"
                           style={{ minWidth: "25%", textAlign: "right" }}
                         >
-                         ${(item.price * item.quantity).toFixed(2)}
+                          ${(item.price * item.quantity).toFixed(2)}
                         </span>
-                     </li>
+                      </li>
                     ))}
                   </ul>
                 )}
               </div>
 
-              {/* Shipping Details */}
               <div className="card shadow-sm mb-5 p-4">
                 <h4 className="fw-bold mb-3">📦 Shipping Details</h4>
                 {shippingDetails && shippingDetails.address_1 ? (
                   <div>
                     <p className="mb-1">{shippingDetails.address_1}</p>
-                    {shippingDetails.address_2 && (
-                      <p className="mb-1">{shippingDetails.address_2}</p>
-                    )}
+                    {shippingDetails.address_2 && <p className="mb-1">{shippingDetails.address_2}</p>}
                     <p className="mb-1">
-                      {shippingDetails.city}, {shippingDetails.state}{" "}
-                      {shippingDetails.zip}
+                      {shippingDetails.city}, {shippingDetails.state} {shippingDetails.zip}
                     </p>
                   </div>
                 ) : (
@@ -171,18 +228,15 @@ const OrderReview = () => {
                 )}
               </div>
 
-              {/* Payment Details */}
               <div className="card shadow-sm p-4">
                 <h4 className="fw-bold mb-3">💳 Payment Details</h4>
                 {paymentDetails && paymentDetails.credit_card_number ? (
                   <div>
                     <p className="mb-1">
-                      <strong>Card Holder:</strong>{" "}
-                      {paymentDetails.card_holder_name || "N/A"}
+                      <strong>Card Holder:</strong> {paymentDetails.card_holder_name || "N/A"}
                     </p>
                     <p className="mb-1">
-                      <strong>Card Number:</strong>{" "}
-                      {maskCardNumber(paymentDetails.credit_card_number)}
+                      <strong>Card Number:</strong> {maskCardNumber(paymentDetails.credit_card_number)}
                     </p>
                   </div>
                 ) : (
@@ -191,12 +245,8 @@ const OrderReview = () => {
               </div>
             </div>
 
-            {/* Order Summary */}
             <div className="col-md-4">
-              <div
-                className="card shadow-lg text-center p-4"
-                style={{ borderRadius: "1rem" }}
-              >
+              <div className="card shadow-lg text-center p-4" style={{ borderRadius: "1rem" }}>
                 <h4 className="fw-bold mb-3">Order Summary</h4>
 
                 <div className="text-start mx-auto" style={{ maxWidth: "260px" }}>
@@ -230,7 +280,7 @@ const OrderReview = () => {
                       Processing...
                     </>
                   ) : (
-                    'Place Order'
+                    "Place Order"
                   )}
                 </button>
               </div>
