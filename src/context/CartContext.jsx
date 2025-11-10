@@ -1,34 +1,42 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
 
-const API_BASE_URL = "https://3tuppmi6x6.execute-api.us-east-2.amazonaws.com/dev";
+const API_BASE_URL = "https://818i0hreog.execute-api.us-east-2.amazonaws.com/dev";
 
 const CartProvider = ({ children }) => {
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [cart, setCart] = useState(new Map());
   const [cartQuantity, setCartQuantity] = useState(0);
   const [cartTotalCost, setCartTotalCost] = useState(0);
   const [shippingCost, setShippingCost] = useState(10.99);
-  
+
   const [toasts, setToasts] = useState([]);
 
-  // Fetch catalog from API on mount
   useEffect(() => {
     const fetchCatalog = async () => {
       try {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}/inventory-management/inventory`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch catalog: ${response.status}`);
-        }
-        
+        if (!response.ok) throw new Error(`Failed to fetch catalog: ${response.status}`);
         const data = await response.json();
-        setCatalog(data);
+
+        const normalized = data.map((p) => ({
+          id: p.id || p.ID,
+          name: p.name || p.NAME || "Unnamed Product",
+          description: p.description || p.DESCRIPTION || "No description available.",
+          price: p.price || p.UNIT_PRICE || 0,
+          available_quantity:
+            p.available_quantity || p.AVAILABLE_QUANTITY || p.quantity || 0,
+          players: p.players || p.PLAYERS || "N/A",
+          time: p.time || p.TIME || "Unknown",
+          age: p.age || p.AGE || "All ages",
+        }));
+
+        setCatalog(normalized);
         setError(null);
       } catch (err) {
         console.error("Error fetching catalog:", err);
@@ -44,85 +52,87 @@ const CartProvider = ({ children }) => {
   const showToast = (productName) => {
     const newToast = {
       id: Date.now(),
-      message: 'Added to cart!',
-      productName
+      message: "Added to cart!",
+      productName,
     };
-    
-    setToasts(prev => [...prev, newToast]);
-    
+
+    setToasts((prev) => [...prev, newToast]);
     setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== newToast.id));
+      setToasts((prev) => prev.filter((toast) => toast.id !== newToast.id));
     }, 3000);
   };
 
   const removeToast = (id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   const addToCart = (id) => {
-    const product = catalog.find(p => p.id === id);
-    
-    setCart(prev => {
+    const product = catalog.find((p) => p.id === id);
+    if (!product) return;
+
+    setCart((prev) => {
       const newCart = new Map(prev);
-      newCart.set(id, (newCart.get(id) || 0) + 1);
+      const currentQty = newCart.get(id) || 0;
+
+      if (product.available_quantity && currentQty >= product.available_quantity) {
+        alert(`Only ${product.available_quantity} units of ${product.name} are available.`);
+        return prev;
+      }
+
+      newCart.set(id, currentQty + 1);
       return newCart;
     });
-    setCartQuantity(cartQuantity + 1);
-    setCartTotalCost(cartTotalCost + product.price);
-    
+
+    setCartQuantity((prev) => prev + 1);
+    setCartTotalCost((prev) => prev + Number(product.price || 0));
     showToast(product.name);
   };
 
-  const removeFromCart = (id, removeAll) => {
-    let qty = cart.get(id) || 0;
-    const price = catalog.find(p => p.id === id)?.price || 0;
+  const removeFromCart = (id, removeAll = false) => {
+    const product = catalog.find((p) => p.id === id);
+    if (!product) return;
 
-    setCart(prev => {
+    setCart((prev) => {
       const newCart = new Map(prev);
-      if (!newCart.has(id)) return newCart;
+      const currentQty = newCart.get(id) || 0;
+      if (currentQty === 0) return prev;
 
-      if (qty > 1 && !removeAll) {
-        newCart.set(id, qty - 1);
-      } else {
+      if (removeAll || currentQty === 1) {
         newCart.delete(id);
-      }  
-
+      } else {
+        newCart.set(id, currentQty - 1);
+      }
       return newCart;
     });
 
-    if (removeAll) {
-      setCartQuantity(cartQuantity - qty);
-      setCartTotalCost(cartTotalCost - price * qty);
-    } else {
-      setCartQuantity(cartQuantity - 1);
-      setCartTotalCost(cartTotalCost - price);
-    }
+    const price = Number(product.price || 0);
+    setCartQuantity((prev) => (removeAll ? prev - (cart.get(id) || 1) : prev - 1));
+    setCartTotalCost((prev) =>
+      removeAll ? prev - price * (cart.get(id) || 1) : prev - price
+    );
   };
 
   const updateQuantity = (id, newQty) => {
-    setCart(prev => {
+    const product = catalog.find((p) => p.id === id);
+    if (!product) return;
+
+    setCart((prev) => {
       const newCart = new Map(prev);
+      if (newQty <= 0) newCart.delete(id);
+      else newCart.set(id, newQty);
 
-      if (newQty <= 0) {
-        newCart.delete(id);
-      } else {
-        newCart.set(id, newQty);
-      }
-
-      let newTotalQty = 0;
-      let newTotalCost = 0;
-
+      let totalQty = 0;
+      let totalCost = 0;
       for (const [pid, qty] of newCart.entries()) {
-        const product = catalog.find(p => p.id === pid);
-        if (product) {
-          newTotalQty += qty;
-          newTotalCost += product.price * qty;
+        const item = catalog.find((p) => p.id === pid);
+        if (item) {
+          totalQty += qty;
+          totalCost += qty * Number(item.price || 0);
         }
       }
 
-      setCartQuantity(newTotalQty);
-      setCartTotalCost(newTotalCost);
-
+      setCartQuantity(totalQty);
+      setCartTotalCost(totalCost);
       return newCart;
     });
   };
@@ -131,58 +141,59 @@ const CartProvider = ({ children }) => {
     setCart(new Map());
     setCartQuantity(0);
     setCartTotalCost(0);
-  }
+  };
 
   const getCartItems = () =>
-    Array.from(cart.entries()).map(([id, qty]) => ({
-      ...catalog.find(p => p.id === id),
-      quantity: qty
-    }));
+    Array.from(cart.entries()).map(([id, qty]) => {
+      const item = catalog.find((p) => p.id === id);
+      return item
+        ? { ...item, quantity: qty }
+        : { id, name: "Unknown Item", price: 0, quantity: qty };
+    });
 
   return (
-    <CartContext.Provider value={{ 
-      catalog, 
-      cart, 
-      cartQuantity, 
-      cartTotalCost,
-      shippingCost, 
-      setShippingCost, 
-      addToCart, 
-      removeFromCart, 
-      getCartItems, 
-      updateQuantity,
-      clearCart,
-      loading,
-      error
-    }}>
+    <CartContext.Provider
+      value={{
+        catalog,
+        cart,
+        cartQuantity,
+        cartTotalCost,
+        shippingCost,
+        setShippingCost,
+        addToCart,
+        removeFromCart,
+        getCartItems,
+        updateQuantity,
+        clearCart,
+        loading,
+        error,
+      }}
+    >
       {children}
-      
-      {/* Toast Notifications Container */}
-      <div 
+
+      <div
         style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
           zIndex: 9999,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          maxWidth: '350px'
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          maxWidth: "350px",
         }}
       >
         {toasts.map((toast) => (
-          <div 
-            key={toast.id}
-            style={{
-              animation: 'slideInFromBottom 0.3s ease-out'
-            }}
-          >
-            <div className="alert alert-success alert-dismissible fade show shadow-lg mb-0" role="alert">
+          <div key={toast.id} style={{ animation: "slideInFromBottom 0.3s ease-out" }}>
+            <div
+              className="alert alert-success alert-dismissible fade show shadow-lg mb-0"
+              role="alert"
+            >
               <strong>✓ {toast.message}</strong>
               <div className="mt-1">{toast.productName}</div>
-              <button 
-                type="button" 
-                className="btn-close" 
+              <button
+                type="button"
+                className="btn-close"
                 onClick={() => removeToast(toast.id)}
                 aria-label="Close"
               ></button>
@@ -190,7 +201,7 @@ const CartProvider = ({ children }) => {
           </div>
         ))}
       </div>
-      
+
       <style>{`
         @keyframes slideInFromBottom {
           from {
