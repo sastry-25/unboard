@@ -19,7 +19,6 @@ const ShippingEntry = () => {
     setShippingEstimate(0);
   }, []);
 
-  // Change shipping estimate on valid state update
   useEffect(() => {
     if (/^[A-Z]{2}$/.test(stateVal)) {
       setShippingEstimate(Math.floor(Math.random() * 4) + 2);
@@ -38,7 +37,6 @@ const ShippingEntry = () => {
     setZip(value);
   };
 
-  // --- Validation ---
   const isAddress1Valid = address1.trim().length >= 1;
   const isCityValid = city.trim().length >= 1;
   const isStateValid = /^[A-Z]{2}$/.test(stateVal);
@@ -46,17 +44,16 @@ const ShippingEntry = () => {
   const isFormValid =
     isAddress1Valid && isCityValid && isStateValid && isZipValid;
 
-  // --- Submit Handler ---
   const updateShippingDetails = (e) => {
     e.preventDefault();
     if (!isFormValid) return;
 
     setShippingDetails({
-      address_1: address1,
-      address_2: address2,
+      address1: address1,
+      address2: address2,
       city: city,
       state: stateVal,
-      zip: zip,
+      postalCode: zip,
     });
 
     navigate("/order/viewOrder");
@@ -67,7 +64,6 @@ const ShippingEntry = () => {
       <Navbar />
 
       <main className="flex-grow-1">
-        {/* Header */}
         <div className="bg-primary text-white py-4">
           <div className="container">
             <h1 className="display-5 fw-bold">Shipping Information</h1>
@@ -85,7 +81,6 @@ const ShippingEntry = () => {
                   onSubmit={updateShippingDetails}
                   style={{ maxWidth: "300px" }}
                 >
-                  {/* Address Line 1 */}
                   <div className="mb-4">
                     <label className="form-label fw-semibold">
                       Address Line 1
@@ -99,7 +94,6 @@ const ShippingEntry = () => {
                     />
                   </div>
 
-                  {/* Address Line 2 */}
                   <div className="mb-4">
                     <label className="form-label fw-semibold">
                       Address Line 2
@@ -113,7 +107,6 @@ const ShippingEntry = () => {
                     />
                   </div>
 
-                  {/* City and State */}
                   <div className="mb-4">
                     <div className="d-flex justify-content-between align-items-end">
                       <div>
@@ -141,7 +134,6 @@ const ShippingEntry = () => {
                     </div>
                   </div>
 
-                  {/* Zip */}
                   <div className="mb-5">
                     <label className="form-label fw-semibold">Zip</label>
                     <input
@@ -154,7 +146,6 @@ const ShippingEntry = () => {
                     />
                   </div>
 
-                  {/* Confirm Shipping Button */}
                   <div className="mt-5">
                     <button
                       type="submit"

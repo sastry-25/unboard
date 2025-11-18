@@ -5,12 +5,19 @@ import { useCart } from "../context/CartContext";
 import { useOrder } from "../context/OrderContext";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "https://818i0hreog.execute-api.us-east-2.amazonaws.com/dev";
+const API_BASE_URL =
+  "https://818i0hreog.execute-api.us-east-2.amazonaws.com/dev";
 
 const OrderReview = () => {
   const navigate = useNavigate();
   const { getCartItems, cartTotalCost, clearCart } = useCart();
-  const { shippingDetails, paymentDetails, salesTax, shippingCost, clearOrderDetails } = useOrder();
+  const {
+    shippingDetails,
+    paymentDetails,
+    salesTax,
+    shippingCost,
+    clearOrderDetails,
+  } = useOrder();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorHtml, setErrorHtml] = useState(null);
@@ -20,7 +27,7 @@ const OrderReview = () => {
 
   const maskCardNumber = (number) => {
     if (!number) return "";
-    const cleaned = number.replace(/\s/g, "");
+    const cleaned = String(number).replace(/\s/g, "");
     if (cleaned.length < 16) return "Invalid Number";
     return "**** **** **** " + cleaned.slice(12);
   };
@@ -29,17 +36,21 @@ const OrderReview = () => {
     let items = Array.isArray(result.items) ? result.items.slice() : [];
 
     if (!items.length && result.message?.toLowerCase().includes("not in stock")) {
-      const available = Number.isFinite(result.availableQuantity) ? result.availableQuantity : 0;
+      const available = Number.isFinite(result.availableQuantity)
+        ? result.availableQuantity
+        : 0;
       const cartItems = getCartItems();
       const idMatch = result.message.match(/item\s+(\d+)/i);
       let failing = null;
 
       if (idMatch) {
         const failedId = parseInt(idMatch[1], 10);
-        failing = cartItems.find((ci) => Number(ci.id) === failedId) || null;
+        failing =
+          cartItems.find((ci) => Number(ci.id) === failedId) || null;
       }
       if (!failing) {
-        failing = cartItems.find((ci) => ci.quantity > available) || cartItems[0];
+        failing =
+          cartItems.find((ci) => ci.quantity > available) || cartItems[0];
       }
 
       if (failing) {
@@ -90,32 +101,38 @@ const OrderReview = () => {
           quantity: item.quantity,
         })),
         shipping: {
-          address1: shippingDetails.address_1,
-          address2: shippingDetails.address_2,
+          address1: shippingDetails.address1,
+          address2: shippingDetails.address2,
           city: shippingDetails.city,
           state: shippingDetails.state,
           country: "USA",
-          postalCode: shippingDetails.zip,
-          email: paymentDetails.email || "",
+          postalCode: shippingDetails.postalCode,
+          email: "",
         },
         payment: {
-          cardHolder: paymentDetails.card_holder_name,
-          cardNumber: paymentDetails.credit_card_number,
-          expirationDate: paymentDetails.expir_date,
+          cardHolder: paymentDetails.cardHolder,
+          cardNumber: paymentDetails.cardNumber,
+          expirationDate: paymentDetails.expirationDate,
           cvv: paymentDetails.cvv || "",
         },
-        customerName: paymentDetails.card_holder_name,
-        customerEmail: paymentDetails.email || "",
+        customerName: paymentDetails.cardHolder,
+        customerEmail: "",
       };
 
-      const response = await fetch(`${API_BASE_URL}/order-processing/order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/order-processing/order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+        }
+      );
 
       const rawResult = await response.json();
-      const result = typeof rawResult.body === "string" ? JSON.parse(rawResult.body) : rawResult;
+      const result =
+        typeof rawResult.body === "string"
+          ? JSON.parse(rawResult.body)
+          : rawResult;
 
       if (rawResult.statusCode && rawResult.statusCode >= 400) {
         if (
@@ -127,17 +144,26 @@ const OrderReview = () => {
         }
 
         if (result.message?.toLowerCase().includes("not found")) {
-          setErrorHtml(`<p>One or more items in your cart could not be found in inventory.</p>
-                        <p>Please refresh your cart before trying again.</p>`);
+          setErrorHtml(
+            `<p>One or more items in your cart could not be found in inventory.</p>
+             <p>Please refresh your cart before trying again.</p>`
+          );
           return;
         }
 
-        setErrorHtml(`<p>${result.message || "We were unable to process your order. Please try again."}</p>`);
+        setErrorHtml(
+          `<p>${
+            result.message ||
+            "We were unable to process your order. Please try again."
+          }</p>`
+        );
         return;
       }
 
       if (!result.confirmationNumber) {
-        setErrorHtml(`<p>Order succeeded but no confirmation number was returned.</p>`);
+        setErrorHtml(
+          `<p>Order succeeded but no confirmation number was returned.</p>`
+        );
         return;
       }
 
@@ -153,7 +179,9 @@ const OrderReview = () => {
       });
     } catch (err) {
       console.error("Error placing order:", err);
-      setErrorHtml(`<p>A network or server error occurred. Please try again.</p>`);
+      setErrorHtml(
+        `<p>A network or server error occurred. Please try again.</p>`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +195,9 @@ const OrderReview = () => {
         <div className="bg-primary text-white py-4">
           <div className="container text-center">
             <h1 className="display-5 fw-bold">Order Review</h1>
-            <p className="lead">Confirm your order details before submission</p>
+            <p className="lead">
+              Confirm your order details before submission
+            </p>
           </div>
         </div>
 
@@ -199,11 +229,16 @@ const OrderReview = () => {
                         >
                           <strong>{item.name}</strong>
                           <br />
-                          <span className="text-muted">Quantity: {item.quantity}</span>
+                          <span className="text-muted">
+                            Quantity: {item.quantity}
+                          </span>
                         </div>
                         <span
                           className="fw-semibold text-end"
-                          style={{ minWidth: "25%", textAlign: "right" }}
+                          style={{
+                            minWidth: "25%",
+                            textAlign: "right",
+                          }}
                         >
                           ${(item.price * item.quantity).toFixed(2)}
                         </span>
@@ -215,41 +250,56 @@ const OrderReview = () => {
 
               <div className="card shadow-sm mb-5 p-4">
                 <h4 className="fw-bold mb-3">📦 Shipping Details</h4>
-                {shippingDetails && shippingDetails.address_1 ? (
+                {shippingDetails && shippingDetails.address1 ? (
                   <div>
-                    <p className="mb-1">{shippingDetails.address_1}</p>
-                    {shippingDetails.address_2 && <p className="mb-1">{shippingDetails.address_2}</p>}
+                    <p className="mb-1">{shippingDetails.address1}</p>
+                    {shippingDetails.address2 && (
+                      <p className="mb-1">{shippingDetails.address2}</p>
+                    )}
                     <p className="mb-1">
-                      {shippingDetails.city}, {shippingDetails.state} {shippingDetails.zip}
+                      {shippingDetails.city}, {shippingDetails.state}{" "}
+                      {shippingDetails.postalCode}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-muted">No shipping information provided.</p>
+                  <p className="text-muted">
+                    No shipping information provided.
+                  </p>
                 )}
               </div>
 
               <div className="card shadow-sm p-4">
                 <h4 className="fw-bold mb-3">💳 Payment Details</h4>
-                {paymentDetails && paymentDetails.credit_card_number ? (
+                {paymentDetails && paymentDetails.cardNumber ? (
                   <div>
                     <p className="mb-1">
-                      <strong>Card Holder:</strong> {paymentDetails.card_holder_name || "N/A"}
+                      <strong>Card Holder:</strong>{" "}
+                      {paymentDetails.cardHolder || "N/A"}
                     </p>
                     <p className="mb-1">
-                      <strong>Card Number:</strong> {maskCardNumber(paymentDetails.credit_card_number)}
+                      <strong>Card Number:</strong>{" "}
+                      {maskCardNumber(paymentDetails.cardNumber)}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-muted">No payment information provided.</p>
+                  <p className="text-muted">
+                    No payment information provided.
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="col-md-4">
-              <div className="card shadow-lg text-center p-4" style={{ borderRadius: "1rem" }}>
+              <div
+                className="card shadow-lg text-center p-4"
+                style={{ borderRadius: "1rem" }}
+              >
                 <h4 className="fw-bold mb-3">Order Summary</h4>
 
-                <div className="text-start mx-auto" style={{ maxWidth: "260px" }}>
+                <div
+                  className="text-start mx-auto"
+                  style={{ maxWidth: "260px" }}
+                >
                   <p className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
                     <span>${cartTotalCost.toFixed(2)}</span>
@@ -276,7 +326,11 @@ const OrderReview = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
                       Processing...
                     </>
                   ) : (

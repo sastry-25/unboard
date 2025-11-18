@@ -9,6 +9,7 @@ const PaymentEntry = () => {
   const navigate = useNavigate();
   const { cartTotalCost } = useCart();
   const { setPaymentDetails, salesTax, shippingCost } = useOrder();
+
   const calculatedTax = (cartTotalCost + shippingCost) * salesTax;
   const orderTotal = cartTotalCost + shippingCost + calculatedTax;
 
@@ -38,29 +39,23 @@ const PaymentEntry = () => {
   };
 
   const unformattedCardNumber = cardNumber.replace(/\s/g, "");
-  const unformattedExpDate = expDate.replace("/", "");
-
   const isCardHolderValid = cardHolder.trim().length >= 1;
   const isCardNumberValid = unformattedCardNumber.length === 16;
-  const isExpDateValid = unformattedExpDate.length === 4;
+  const isExpDateValid = expDate.replace("/", "").length === 4;
   const isCvvValid = cvv.length === 3;
 
   const isFormValid =
-    isCardHolderValid &&
-    isCardNumberValid &&
-    isExpDateValid &&
-    isCvvValid;
+    isCardHolderValid && isCardNumberValid && isExpDateValid && isCvvValid;
 
   const updatePaymentDetails = (e) => {
     e.preventDefault();
-
     if (!isFormValid) return;
 
     setPaymentDetails({
-      credit_card_number: unformattedCardNumber,
-      expir_date: unformattedExpDate,
-      cvvCode: cvv,
-      card_holder_name: cardHolder,
+      cardHolder: cardHolder,
+      cardNumber: unformattedCardNumber,
+      expirationDate: expDate,
+      cvv: cvv,
     });
 
     navigate("/order/shippingEntry");
@@ -152,7 +147,9 @@ const PaymentEntry = () => {
                 <div className="mb-5" style={{ maxWidth: "300px" }}>
                   <div className="d-flex justify-content-between align-items-end">
                     <div>
-                      <label className="form-label fw-semibold">Exp. Date</label>
+                      <label className="form-label fw-semibold">
+                        Exp. Date
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-lg"

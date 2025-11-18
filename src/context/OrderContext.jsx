@@ -1,40 +1,42 @@
-import { createContext, useContext, useState } from 'react';
-import CartProvider from './CartContext';
+import { createContext, useContext, useState } from "react";
+import CartProvider from "./CartContext";
 
 const OrderContext = createContext();
 
 const OrderProvider = ({ children }) => {
   const [salesTax, setSalesTax] = useState(0.07);
   const [shippingCost, setShippingCost] = useState(10.99);
+
   const [paymentDetails, setPaymentDetails] = useState({
-    credit_card_number: '',
-    expir_date: '',
-    cvvCode: '',
-    card_holder_name: ''
+    cardHolder: "",
+    cardNumber: "",
+    expirationDate: "",
+    cvv: "",
   });
+
   const [shippingDetails, setShippingDetails] = useState({
-    address_1: '',
-    address_2: '',
-    city: '',
-    state: '',
-    zip: ''
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    postalCode: "",
   });
 
   const clearOrderDetails = () => {
     setPaymentDetails({
-      credit_card_number: '',
-      expir_date: '',
-      cvvCode: '',
-      card_holder_name: ''
+      cardHolder: "",
+      cardNumber: "",
+      expirationDate: "",
+      cvv: "",
     });
     setShippingDetails({
-      address_1: '',
-      address_2: '',
-      city: '',
-      state: '',
-      zip: ''
+      address1: "",
+      address2: "",
+      city: "",
+      state: "",
+      postalCode: "",
     });
-  }
+  };
 
   return (
     <OrderContext.Provider
@@ -47,7 +49,7 @@ const OrderProvider = ({ children }) => {
         setPaymentDetails,
         shippingDetails,
         setShippingDetails,
-        clearOrderDetails
+        clearOrderDetails,
       }}
     >
       <CartProvider>{children}</CartProvider>
